@@ -31,18 +31,27 @@ fn main() {
     println!("{}", p2result);
 }
 
-fn get_highest_index(bank: &str) -> (usize, u64){
+fn get_highest_index(bank: &str) -> (usize, u64) {
+    /* fea solution :3
+    bank.chars()
+        .map(|c| c.to_digit(10).unwrap() as u64)
+        .enumerate()
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .max_by_key(|(_i, c)| *c)
+        .unwrap()
+    */
+
     let mut highest_index: usize = 0;
     let mut highest_num: u64 = 0;
-    let mut chars = bank.chars();
-    let mut i: usize = 0;
-    while let Some(c) = chars.next()  {
+    let mut chars = bank.chars().enumerate();
+    while let Some((i, c)) = chars.next() {
         let num: u64 = c.to_digit(10).unwrap().into();
-        if num > highest_num{
+        if num > highest_num {
             highest_index = i;
             highest_num = num;
         }
-        i += 1;
     }
     return (highest_index, highest_num);
 }
@@ -53,7 +62,6 @@ pub fn p1(input: &str) -> u64 {
         let (first_index, first_num) = get_highest_index(bank.split_at(bank.len() - 1).0);
         let (_, second_num) = get_highest_index(bank.split_at(first_index + 1).1);
         let num = (first_num * 10) + second_num;
-        println!("{} {}", bank, num);
         joltage += num;
     }
 
@@ -71,8 +79,7 @@ pub fn p2(input: &str) -> u64 {
             index += i + 1;
             num += 10u64.pow((digit - 1).try_into().unwrap()) * n;
         }
-        
-        println!("{} {}", bank, num);
+
         joltage += num;
     }
 
@@ -109,19 +116,16 @@ mod test {
     fn test_part2_1() {
         assert_eq!(p2(r"987654321111111"), 987654321111);
     }
-        #[test]
+    #[test]
     fn test_part2_2() {
         assert_eq!(p2(r"811111111111119"), 811111111119);
     }
-        #[test]
+    #[test]
     fn test_part2_3() {
         assert_eq!(p2(r"234234234234278"), 434234234278);
     }
-        #[test]
+    #[test]
     fn test_part2_4() {
         assert_eq!(p2(r"818181911112111"), 888911112111);
     }
-
-
-
 }
