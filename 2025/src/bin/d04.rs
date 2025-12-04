@@ -53,16 +53,15 @@ pub fn p1(input: &str) -> i32 {
                     let nx = x.checked_add_signed(dx);
                     let ny = y.checked_add_signed(dy);
 
-                    if !nx.is_some() || !ny.is_some() {
+                    if nx.is_none() || ny.is_none() {
                         continue;
                     }
 
-                    if let Some(row) = grid.get(ny.unwrap()) {
-                        if let Some(c) = row.get(nx.unwrap()) {
-                            if *c == '@' {
-                                rolls += 1;
-                            }
-                        }
+                    if let Some(row) = grid.get(ny.unwrap())
+                        && let Some(c) = row.get(nx.unwrap())
+                        && *c == '@'
+                    {
+                        rolls += 1;
                     }
                 }
             }
@@ -93,16 +92,15 @@ fn remove_rolls_of_paper(grid: &mut Vec<Vec<char>>) -> i32 {
                     let nx = x.checked_add_signed(dx);
                     let ny = y.checked_add_signed(dy);
 
-                    if !nx.is_some() || !ny.is_some() {
+                    if nx.is_none() || ny.is_none() {
                         continue;
                     }
 
-                    if let Some(row) = grid.get(ny.unwrap()) {
-                        if let Some(c) = row.get(nx.unwrap()) {
-                            if *c == '@' {
-                                rolls += 1;
-                            }
-                        }
+                    if let Some(row) = grid.get(ny.unwrap())
+                        && let Some(c) = row.get(nx.unwrap())
+                        && *c == '@'
+                    {
+                        rolls += 1;
                     }
                 }
             }
