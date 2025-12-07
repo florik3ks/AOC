@@ -66,8 +66,8 @@ pub fn p2(input: &str) -> usize {
             if c == '^'
                 && let Some(t) = tachyons.remove(&i)
             {
-                tachyons.insert(i + 1, t + tachyons.get(&(i + 1)).unwrap_or(&0));
-                tachyons.insert(i - 1, t + tachyons.get(&(i - 1)).unwrap_or(&0));
+                tachyons.entry(i + 1).and_modify(|v| *v += t).or_insert(t);
+                tachyons.entry(i - 1).and_modify(|v| *v += t).or_insert(t);
             }
         }
     }
