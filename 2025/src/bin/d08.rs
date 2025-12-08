@@ -188,8 +188,6 @@ pub fn p2(input: &str) -> i64 {
     for i in 0..n {
         link.push(i);
     }
-    let mut p1x = 0;
-    let mut p2x = 0;
     let mut current = &dists[0];
     while size[find(0, &link)] < n{
         current = dists_iter.next().unwrap();
