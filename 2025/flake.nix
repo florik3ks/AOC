@@ -26,11 +26,12 @@
       {
         devShells.default = pkgs.mkShell rec {
           packages = [
-            pkgs.clippy
+            # pkgs.clippy
             (pkgs.rust-bin.stable.latest.default.override {
                 extensions = [
                   "rust-src" # for rust-analyzer
                   "rust-analyzer"
+                  "clippy"
                 ];
               }
             )
