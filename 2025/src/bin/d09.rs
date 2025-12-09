@@ -60,10 +60,15 @@ fn visualize(ordered_corners: &[(i64, i64)], (min_x, min_y, max_x, max_y): (i64,
     }
     data = data.close();
 
+    let mut stroke_width = 100;
+    if cfg!(test){
+        stroke_width = 1;
+    }
+
     let path = Path::new()
         .set("fill", "white")
         .set("stroke", "pink")
-        .set("stroke-width", 100)
+        .set("stroke-width", stroke_width)
         .set("d", data);
 
     let document = Document::new()
@@ -71,6 +76,25 @@ fn visualize(ordered_corners: &[(i64, i64)], (min_x, min_y, max_x, max_y): (i64,
         .add(path);
 
     svg::save("meow.svg", &document)
+}
+
+
+fn line_intersects(edges: &HashSet<(i64, i64)>, line: impl Iterator<Item = (i64, i64)>) -> bool{
+    
+    let mut intersecting = true;
+    let mut changes = 0;
+    for p in line{
+        if !edges.contains(&p){
+            if intersecting{
+                intersecting = false;
+                continue;
+            }
+
+        }
+
+    }
+
+    return false;
 }
 
 pub fn p2(input: &str) -> i64 {
@@ -102,11 +126,18 @@ pub fn p2(input: &str) -> i64 {
             }
         }
     }
-    println!("{} {} {} {}", min_x, min_y, max_x, max_y);
-    println!("{}", (max_x - min_x) * (max_y - min_y));
+    // println!("{} {} {} {}", min_x, min_y, max_x, max_y);
+    // println!("{}", (max_x - min_x) * (max_y - min_y));
     
     visualize(&corners, (min_x, min_y, max_x, max_y)).unwrap();
     
+    let pairs_sorted = corners.iter().tuple_combinations() // iterate over combinations
+        .map(|(p, q)| (((p.0 - q.0).abs() + 1) * ((p.1 - q.1).abs() + 1), p, q)).sorted_by_key(|v|v.0).rev();
+
+    for (d, p, q) in pairs_sorted{
+
+    }
+
     let corner_hash: HashSet<(i64, i64)> = corners.into_iter().collect();
 
     return 0;
