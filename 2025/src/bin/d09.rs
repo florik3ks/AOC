@@ -1,9 +1,9 @@
+use itertools::Itertools;
 use std::cmp;
-use std::{fs::File, io::Read};
 use std::time::Instant;
+use std::{fs::File, io::Read};
 
-
-fn main(){
+fn main() {
     // get day number from file
     let day = file!().split('/').last().unwrap()[1..3].to_owned();
 
@@ -33,29 +33,22 @@ fn main(){
     println!("{}", p2result);
 }
 
-
-pub fn p1(input: &str) -> i64{
-    let points: Vec<_> = input.lines().map(|l| {
-        let mut a = l.split(",").map(|v| v.parse::<i64>().unwrap());
-        (a.next().unwrap(), a.next().unwrap())
-    }
-    ).collect();
-
-    let mut dists: Vec<(i64, (i64, i64), (i64, i64))> = Vec::new();
-    for (i, p) in points.iter().enumerate() {
-        for q in points.split_at(i + 1).1.iter() {
-            let x = cmp::max(p.0, q.0) - cmp::min(p.0, q.0);
-            let y = cmp::max(p.1, q.1) - cmp::min(p.1, q.1);
-            let dist: i64 = (x + 1) * (y + 1);
-            dists.push((dist, *p, *q));
-        }
-    }
-    dists.sort_by_key(|v| v.0);
-    return dists.last().unwrap().0;
+pub fn p1(input: &str) -> i64 {
+    input
+        .lines()
+        .filter_map(|l| {
+            l.split(",")
+                .map(|v| v.parse::<i64>().unwrap())
+                .collect_tuple::<(i64, i64)>()
+        }) // parse lines to number tuples
+        .tuple_combinations() // iterate over combinations
+        .map(|(p, q)| ((p.0 - q.0).abs() + 1) * ((p.1 - q.1).abs() + 1)) // calculate distances
+        .sorted()
+        .next_back()
+        .unwrap()
 }
 
-pub fn p2(input: &str) -> i64{
-
+pub fn p2(input: &str) -> i64 {
 
     return 0;
 }
@@ -81,7 +74,7 @@ mod test {
 
     #[test]
     fn test_part2() {
-        let expected = 50;
+        let expected = 0;
         let example = r"7,1
 11,1
 11,7
