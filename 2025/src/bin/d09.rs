@@ -1,7 +1,11 @@
 use itertools::Itertools;
-use std::cmp;
+use std::cmp::{max, min};
+use std::collections::HashSet;
 use std::time::Instant;
 use std::{fs::File, io::Read};
+use svg::Document;
+use svg::node::element::Path;
+use svg::node::element::path::Data;
 
 fn main() {
     // get day number from file
@@ -48,11 +52,65 @@ pub fn p1(input: &str) -> i64 {
         .unwrap()
 }
 
+fn visualize(ordered_corners: &[(i64, i64)], (min_x, min_y, max_x, max_y): (i64, i64, i64, i64)) -> Result<(), std::io::Error> {
+    let mut meow = ordered_corners.iter();
+    let mut data = Data::new().move_to(*meow.next().unwrap());
+    for meowmeow in meow{
+        data = data.line_to(*meowmeow);
+    }
+    data = data.close();
+
+    let path = Path::new()
+        .set("fill", "white")
+        .set("stroke", "pink")
+        .set("stroke-width", 100)
+        .set("d", data);
+
+    let document = Document::new()
+        .set("viewBox", (min_x - 1, min_y - 1, max_x + 1, max_y + 1))
+        .add(path);
+
+    svg::save("meow.svg", &document)
+}
+
 pub fn p2(input: &str) -> i64 {
+    let corners: Vec<(i64, i64)> = input
+        .lines()
+        .filter_map(|l| {
+            l.split(",")
+                .map(|v| v.parse::<i64>().unwrap())
+                .collect_tuple::<(i64, i64)>()
+        })
+        .collect();
+
+    let min_x = corners.iter().min_by_key(|(x, _)| x).unwrap().0;
+    let max_x = corners.iter().max_by_key(|(x, _)| x).unwrap().0;
+
+    let min_y = corners.iter().min_by_key(|(_, y)| y).unwrap().1;
+    let max_y = corners.iter().max_by_key(|(_, y)| y).unwrap().1;
+
+    let mut edges: HashSet<(i64, i64)> = HashSet::new();
+    for (&(x1, y1), &(x2, y2)) in corners.iter().circular_tuple_windows() {
+        if x1 != x2 {
+            for x in min(x1, x2)..max(x1, x2) {
+                edges.insert((x, y1));
+            }
+        }
+        if y1 != y2 {
+            for y in min(y1, y2)..max(y1, y2) {
+                edges.insert((x1, y));
+            }
+        }
+    }
+    println!("{} {} {} {}", min_x, min_y, max_x, max_y);
+    println!("{}", (max_x - min_x) * (max_y - min_y));
+    
+    visualize(&corners, (min_x, min_y, max_x, max_y)).unwrap();
+    
+    let corner_hash: HashSet<(i64, i64)> = corners.into_iter().collect();
 
     return 0;
 }
-
 
 #[cfg(test)]
 mod test {
@@ -74,7 +132,7 @@ mod test {
 
     #[test]
     fn test_part2() {
-        let expected = 0;
+        let expected = 24;
         let example = r"7,1
 11,1
 11,7
