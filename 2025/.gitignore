@@ -3,4 +3,4 @@
 debug/
 target/
 **/*.rs.bk
-aa
+output
