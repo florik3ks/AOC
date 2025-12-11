@@ -36,6 +36,20 @@
               }
             )
           ];
+
+          nativeBuildInputs = [
+            pkgs.pkg-config
+          ];
+
+          buildInputs = [
+            pkgs.openssl
+            pkgs.openblas
+            pkgs.lapack
+            pkgs.gccNGPackages_15.gfortran-unwrapped
+            pkgs.gccNGPackages_15.libgfortran
+          ];
+
+          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
         };
       }
     );

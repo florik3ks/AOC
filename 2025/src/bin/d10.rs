@@ -1,7 +1,10 @@
 use std::collections::{HashSet, VecDeque};
 use std::time::Instant;
+use std::vec;
 use std::{fs::File, io::Read};
 
+use ndarray::{prelude::*};
+use ndarray_linalg::Solve;
 use regex::Regex;
 
 fn main() {
@@ -78,7 +81,6 @@ pub fn p1(input: &str) -> i32 {
         })
         .collect();
 
-
     let mut result = 0;
     for (lights, buttons) in parsed {
         result += find_combination(lights, buttons);
@@ -109,19 +111,72 @@ fn find_combination(lights: i16, buttons: Vec<i16>) -> i32 {
 }
 
 pub fn p2(input: &str) -> i32 {
+    let re = Regex::new(INPUT_REGEX).unwrap();
+
+    let parsed: Vec<(Vec<Vec<usize>>, Vec<f64>)> = input
+        .lines()
+        .map(|l| {
+            let Some(captures) = re.captures(l) else {
+                panic!("input parsing failed");
+            };
+
+            let _ = &captures["lights"];
+            let buttons = &captures["buttons"];
+            let joltages = &captures["joltages"];
+            (
+                buttons
+                    .split(" ")
+                    .map(|b| {
+                        let mut chars = b.chars();
+                        // drop the ()
+                        chars.next();
+                        chars.next_back();
+                        chars
+                            .map(|c| match c {
+                                ',' => 0,
+                                _ => c.to_digit(10).unwrap() as usize,
+                            })
+                            .collect()
+                    })
+                    .collect(),
+                joltages
+                    .split(",")
+                    .map(|v| v.trim().parse().unwrap())
+                    .collect(),
+            )
+        })
+        .collect();
+
+    let mut result = 0;
+    for (buttons, j) in parsed {
+        let buttons_mapped: Vec<f64> = buttons
+            .iter()
+            .flat_map(|button| {
+                let mut current: Vec<f64> = vec![0.; j.len()];
+                for num in button {
+                    current[*num] = 1.;
+                }
+                return current;
+            })
+            .collect();
+
+        let a: Array2<f64> =
+            Array2::from_shape_vec((j.len(), buttons.len()), buttons_mapped).unwrap();
+        println!("{a}");
+
+        let b: Array1<f64> = Array::from_vec(j);
+
+
+        // let a: Array2<f64> = array![[3., 2., -1.], [2., -2., 4.], [-2., 1., -2.]];
+        // let b: Array1<f64> = array![1., -2., 0.];
+
+        // Invalid value for LAPACK subroutine 4-th argument ???
+        let x = a.solve_into(b).unwrap_err();
+        println!("{x}");
+    }
+
     return 0;
 }
-
-
-
-// [...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}
-
-// .....
-// #...#
-// .##.#
-// ...#.
-
-
 
 #[cfg(test)]
 mod test {
@@ -139,8 +194,10 @@ mod test {
 
     #[test]
     fn test_part2() {
-        let expected = 0;
-        let example = r"";
+        let expected = 33;
+        let example = r"[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
+[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}
+[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}";
         assert_eq!(p2(example), expected);
     }
 }
