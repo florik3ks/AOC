@@ -69,7 +69,13 @@ pub fn p1(input: &str) -> i32 {
     return paths;
 }
 
-pub fn p2(input: &str) -> i32 {
+#[derive(Clone)]
+struct Node {
+    outgoing: Vec<usize>,
+    incoming: usize,
+}
+
+pub fn p2(input: &str) -> i64 {
     let mut node_keys: HashMap<&str, usize> = HashMap::new();
     for (i, l) in input.lines().enumerate() {
         let key = l.split(":").next().unwrap();
@@ -79,51 +85,107 @@ pub fn p2(input: &str) -> i32 {
     let out_index = node_keys.len();
     node_keys.insert("out", out_index);
 
-    let mut nodes = vec![Vec::<usize>::new(); node_keys.len()];
+    let mut nodes = vec![
+        Node {
+            outgoing: Vec::new(),
+            incoming: 0
+        };
+        node_keys.len()
+    ];
     for l in input.lines() {
         let mut split = l.split(":");
         let key = split.next().unwrap(); // ignore key
         for node in split.next().unwrap().trim().split_ascii_whitespace() {
-            nodes[*node_keys.get(key).unwrap()].push(*node_keys.get(node).unwrap());
+            // add outgoing nodes
+            nodes[*node_keys.get(key).unwrap()]
+                .outgoing
+                .push(*node_keys.get(node).unwrap());
+            // increment incoming nodes
+            nodes[*node_keys.get(node).unwrap()].incoming += 1;
         }
     }
 
-    let paths = get_paths_from_to(
+    let svr_to_fft = get_paths_from_to(
+        *node_keys.get("svr").unwrap(),
+        *node_keys.get("svr").unwrap(),
+        1,
+        *node_keys.get("fft").unwrap(),
+        &node_keys,
+        &nodes,
+    );
+    let fft_to_dac = get_paths_from_to(
         *node_keys.get("svr").unwrap(),
         *node_keys.get("fft").unwrap(),
-        node_keys,
-        nodes,
+        svr_to_fft,
+        *node_keys.get("dac").unwrap(),
+        &node_keys,
+        &nodes,
+    );
+    let dac_to_out = get_paths_from_to(
+        *node_keys.get("svr").unwrap(),
+        *node_keys.get("dac").unwrap(),
+        fft_to_dac,
+        *node_keys.get("out").unwrap(),
+        &node_keys,
+        &nodes,
     );
 
-    return paths;
+    return dac_to_out;
+}
+
+#[derive(Clone)]
+struct WorkingNode {
+    incoming_nodes: usize,
+    path_multiplier: i64,
 }
 
 fn get_paths_from_to(
+    graph_source: usize,
     from: usize,
+    from_multiplier: i64,
     to: usize,
-    node_keys: HashMap<&str, usize>,
-    nodes: Vec<Vec<usize>>,
-) -> i32 {
+    node_keys: &HashMap<&str, usize>,
+    nodes: &[Node],
+) -> i64 {
+    // initialize node data
+    let mut node_data = vec![
+        WorkingNode {
+            incoming_nodes: 0,
+            path_multiplier: 0
+        };
+        node_keys.len()
+    ];
+    node_data[from].path_multiplier = from_multiplier;
+
     let mut queue: VecDeque<usize> = VecDeque::new();
-    queue.push_back(from);
+    queue.push_back(graph_source);
     let mut computed: HashSet<usize> = HashSet::new();
-    computed.insert(from);
-    let mut dists = vec![(0_usize, Vec::<*mut usize>::new()); node_keys.len()];
+    computed.insert(graph_source);
 
     while !queue.is_empty() {
-        let mut current = queue.pop_front().unwrap();
-        for node in nodes[current].iter() { 
+        let current = queue.pop_front().unwrap();
+        // only handle node if all incoming nodes have already been handled
+        if node_data[current].incoming_nodes != nodes[current].incoming {
+            queue.push_back(current);
+            continue;
+        }
+        // if current node is target node, return result
+        if current == to {
+            return node_data[to].path_multiplier;
+        }
+        for node in nodes[current].outgoing.iter() {
+            // add node to queue if not already in it
             if !computed.contains(node) {
-                computed.insert(*node);
                 queue.push_back(*node);
+                computed.insert(*node);
             }
-            dists[*node].1.push(&raw mut current);
+            // update multiplier and incoming counter on target node
+            node_data[*node].path_multiplier += node_data[current].path_multiplier;
+            node_data[*node].incoming_nodes += 1;
         }
     }
 
-    dbg!(dists);
-
-    return 0;
+    panic!("target node not found");
 }
 #[cfg(test)]
 mod test {
