@@ -1,4 +1,4 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::time::Instant;
 use std::{fs::File, io::Read};
 
@@ -70,9 +70,61 @@ pub fn p1(input: &str) -> i32 {
 }
 
 pub fn p2(input: &str) -> i32 {
-    return 0;
+    let mut node_keys: HashMap<&str, usize> = HashMap::new();
+    for (i, l) in input.lines().enumerate() {
+        let key = l.split(":").next().unwrap();
+        node_keys.insert(key, i);
+    }
+
+    let out_index = node_keys.len();
+    node_keys.insert("out", out_index);
+
+    let mut nodes = vec![Vec::<usize>::new(); node_keys.len()];
+    for l in input.lines() {
+        let mut split = l.split(":");
+        let key = split.next().unwrap(); // ignore key
+        for node in split.next().unwrap().trim().split_ascii_whitespace() {
+            nodes[*node_keys.get(key).unwrap()].push(*node_keys.get(node).unwrap());
+        }
+    }
+
+    let paths = get_paths_from_to(
+        *node_keys.get("svr").unwrap(),
+        *node_keys.get("fft").unwrap(),
+        node_keys,
+        nodes,
+    );
+
+    return paths;
 }
 
+fn get_paths_from_to(
+    from: usize,
+    to: usize,
+    node_keys: HashMap<&str, usize>,
+    nodes: Vec<Vec<usize>>,
+) -> i32 {
+    let mut queue: VecDeque<usize> = VecDeque::new();
+    queue.push_back(from);
+    let mut computed: HashSet<usize> = HashSet::new();
+    computed.insert(from);
+    let mut dists = vec![(0_usize, Vec::<*mut usize>::new()); node_keys.len()];
+
+    while !queue.is_empty() {
+        let mut current = queue.pop_front().unwrap();
+        for node in nodes[current].iter() { 
+            if !computed.contains(node) {
+                computed.insert(*node);
+                queue.push_back(*node);
+            }
+            dists[*node].1.push(&raw mut current);
+        }
+    }
+
+    dbg!(dists);
+
+    return 0;
+}
 #[cfg(test)]
 mod test {
     use super::*;
@@ -96,8 +148,21 @@ iii: out
 
     #[test]
     fn test_part2() {
-        let expected = 0;
-        let example = r"";
+        let expected = 2;
+        let example = r"svr: aaa bbb
+aaa: fft
+fft: ccc
+bbb: tty
+tty: ccc
+ccc: ddd eee
+ddd: hub
+hub: fff
+eee: dac
+dac: fff
+fff: ggg hhh
+ggg: out
+hhh: out
+";
         assert_eq!(p2(example), expected);
     }
 }
