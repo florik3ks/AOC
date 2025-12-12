@@ -3,8 +3,10 @@ use std::time::Instant;
 use std::vec;
 use std::{fs::File, io::Read};
 
-use ndarray::{prelude::*};
-use ndarray_linalg::Solve;
+use faer::Side;
+use faer::col::generic::Col;
+use faer::prelude::*;
+use faer::sparse::*;
 use regex::Regex;
 
 fn main() {
@@ -132,9 +134,9 @@ pub fn p2(input: &str) -> i32 {
                         chars.next();
                         chars.next_back();
                         chars
-                            .map(|c| match c {
-                                ',' => 0,
-                                _ => c.to_digit(10).unwrap() as usize,
+                            .filter_map(|c| match c {
+                                ',' => None,
+                                _ => Some(c.to_digit(10).unwrap() as usize),
                             })
                             .collect()
                     })
@@ -149,34 +151,54 @@ pub fn p2(input: &str) -> i32 {
 
     let mut result = 0;
     for (buttons, j) in parsed {
-        let buttons_mapped: Vec<f64> = buttons
-            .iter()
-            .flat_map(|button| {
-                let mut current: Vec<f64> = vec![0.; j.len()];
-                for num in button {
-                    current[*num] = 1.;
+        println!("{} {}", j.len(), buttons.len());
+        let mut a: mat::generic::Mat<mat::Own<f64>> = Mat::zeros(j.len(), buttons.len());
+
+        // for each row of the matrix
+        for (b, button) in buttons.iter().enumerate() {
+            // println!("{:?}\t{b}", button);
+            for row in 0..j.len() {
+                for (i, num) in button.iter().enumerate() {
+                    if *num == row {
+                        // println!("button {b} in row {row} in col {i}");
+                        *a.get_mut(row, b) = 1_f64;
+                    }
                 }
-                return current;
-            })
-            .collect();
+            }
+        }
 
-        let a: Array2<f64> =
-            Array2::from_shape_vec((j.len(), buttons.len()), buttons_mapped).unwrap();
-        println!("{a}");
+        // A(3) B(1,3) C(2) D(2,3) E(0,2) F(0,1) {3,5,4,7}
+        // 3 = E + F        000011
+        // 5 = B + F        010001
+        // 4 = C + D + E    001110
+        // 7 = A + B + D    110100
 
-        let b: Array1<f64> = Array::from_vec(j);
+        // A=1 B=3 C=0 D=3 E=1 F=2
+        // 3 = 1 + 2
+        // 5 = 3 + 2
+        // 4 = 0 + 3 + 1
+        // 7 = 1 + 3 +3
 
+        let b= Col::from_iter(j.clone().into_iter());
+        println!("{a:?}");
+        println!("{b:?}");
 
-        // let a: Array2<f64> = array![[3., 2., -1.], [2., -2., 4.], [-2., 1., -2.]];
-        // let b: Array1<f64> = array![1., -2., 0.];
+        // A^T * Ax = A^T * b
+        // minimizes x
+        let ata = a.transpose() * &a;
+        let atb = a.transpose() * b;
+        
 
-        // Invalid value for LAPACK subroutine 4-th argument ???
-        let x = a.solve_into(b).unwrap_err();
-        println!("{x}");
+        let lr = ata.full_piv_lu();
+        let x = lr.solve(&atb);
+        println!("{x:?}");
     }
 
     return 0;
 }
+
+
+
 
 #[cfg(test)]
 mod test {
