@@ -1,8 +1,7 @@
-use std::{fs::File, io::Read};
 use std::time::Instant;
+use std::{fs::File, io::Read};
 
-
-fn main(){
+fn main() {
     // get day number from file
     let day = file!().split('/').next_back().unwrap()[1..3].to_owned();
 
@@ -32,19 +31,13 @@ fn main(){
     println!("{}", p2result);
 }
 
-
-pub fn p1(input: &str) -> i32{
-
-
+pub fn p1(input: &str) -> i32 {
     return 0;
 }
 
-pub fn p2(input: &str) -> i32{
-
-
+pub fn p2(input: &str) -> i32 {
     return 0;
 }
-
 
 #[cfg(test)]
 mod test {
