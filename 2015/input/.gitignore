@@ -1,0 +1,4 @@
+# ignore contents of input directory but not the directory itself
+*
+!.gitignore
+!input0x.txt

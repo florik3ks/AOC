@@ -1,0 +1,6 @@
+.direnv
+
+debug/
+target/
+**/*.rs.bk
+output
