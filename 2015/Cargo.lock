@@ -16,6 +16,7 @@ name = "aoc2015"
 version = "0.1.0"
 dependencies = [
  "itertools",
+ "md5",
  "rayon",
  "regex",
 ]
@@ -59,6 +60,12 @@ checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
 dependencies = [
  "either",
 ]
+
+[[package]]
+name = "md5"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae960838283323069879657ca3de837e9f7bbb4c7bf6ea7f1b290d5e9476d2e0"
 
 [[package]]
 name = "memchr"
